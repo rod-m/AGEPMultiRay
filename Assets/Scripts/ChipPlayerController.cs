@@ -28,6 +28,10 @@ public class ChipPlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            GameController.Instance.AddScore();
+        }
         // shoot the other chip for some reason
         if (Input.GetKeyDown(KeyCode.Space))
         {

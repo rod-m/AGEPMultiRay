@@ -17,11 +17,30 @@ public class ChipController : MonoBehaviour
     public float moveSpeed = 5f;
     public Transform rayFrom;    // detect ray from here
     public LayerMask rayCastOn;  // raycast on this layer!
-    public Grid grid;
-    public Tilemap tilemap;
+
+    // make array of directions to scan
+    private Vector2[] directions;
+    
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        directions = MultiAngleVector(12);
+     
+    }
+
+    Vector2[] MultiAngleVector(int num)
+    {
+        Vector2[] _directions = new Vector2[num];
+        for (int i = 0; i < num; i++)
+        {
+            float angle = i * 360 / num;
+            float x = Mathf.Cos(angle);
+            float y = Mathf.Sin(angle);
+            Vector2 d = new Vector2(x,y);
+            _directions[i] = d;
+        }
+
+        return _directions;
     }
 
     // Update is called once per frame
@@ -55,8 +74,7 @@ public class ChipController : MonoBehaviour
         if (other.CompareTag("virus"))
         {
             // find where on the grid this is
-            Vector3Int position = grid.WorldToCell(rayFrom.position); 
-            tilemap.SetTile(position, null); // set tile at this position as null
+            Destroy(other.gameObject);
             rb.velocity = Vector2.zero; // stop any movement
             chipstate = ChipStates.SCAN; // resume scan
         }
@@ -65,8 +83,11 @@ public class ChipController : MonoBehaviour
     void Scan()
     {
         rb.angularVelocity = turnSpeed;
-        Vector3 forward = transform.TransformDirection(Vector3.up) * rayDistance;
-        rb.velocity = transform.up * 0.3f;
+        
+        //Vector3 forward = transform.TransformDirection(Vector3.up) * rayDistance;
+        int dirNumber = Time.frameCount % directions.Length;
+        Vector2 forward = directions[dirNumber] * rayDistance;
+        rb.velocity = forward * 0.3f;
         // test for any hits
         RaycastHit2D hit = Physics2D.Raycast( rayFrom.position, forward, rayDistance, rayCastOn);
         if (hit.collider != null)
@@ -75,6 +96,7 @@ public class ChipController : MonoBehaviour
             // draw red if hit
             Debug.DrawRay( rayFrom.position, forward, Color.red);
             rb.angularVelocity = 0;
+          
             chipstate = ChipStates.CLEAN;
         }
         else
